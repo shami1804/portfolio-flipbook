@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Shamiha Sellamuthu — Portfolio</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f7f5f0;
+            font-family: Arial, sans-serif;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .viewer {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+        }
+
+        .title {
+            font-size: 18px;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        #book {
+            width: min(90vw, 1100px);
+            height: min(75vh, 760px);
+            margin: auto;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 22px;
+        }
+
+        button {
+            border: none;
+            background: #174f42;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        #pageNumber {
+            font-size: 14px;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .viewer {
+                padding: 15px 8px;
+            }
+
+            #book {
+                width: 96vw;
+                height: 70vh;
+            }
+
+            .title {
+                font-size: 15px;
+            }
+
+            button {
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="viewer">
+
+    <div class="title">
+        Flip through my portfolio
+    </div>
+
+    <div id="loading" class="loading">
+        Loading portfolio...
+    </div>
+
+    <div id="book"></div>
+
+    <div class="controls">
+        <button onclick="previousPage()">← Previous</button>
+
+        <span id="pageNumber">Page 1</span>
+
+        <button onclick="nextPage()">Next →</button>
+    </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs"
+        type="module"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+
+<script type="module">
+
+    const pdfjsLib = await import(
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs"
+    );
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+
+    const pdfUrl = "portfolio.pdf";
+
+    const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+
+    const book = document.getElementById("book");
+    const loading = document.getElementById("loading");
+    const pageNumber = document.getElementById("pageNumber");
+
+    const pages = [];
+
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+
+        const page = await pdf.getPage(pageNum);
+
+        const viewport = page.getViewport({ scale: 1.5 });
+
+        const canvas = document.createElement("canvas");
+
+        const context = canvas.getContext("2d");
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        await page.render({
+            canvasContext: context,
+            viewport: viewport
+        }).promise;
+
+        pages.push(canvas);
+    }
+
+    loading.style.display = "none";
+
+    const pageFlip = new St.PageFlip(book, {
+        width: 500,
+        height: 700,
+
+        size: "stretch",
+
+        minWidth: 280,
+        maxWidth: 550,
+
+        minHeight: 400,
+        maxHeight: 750,
+
+        showCover: true,
+
+        mobileScrollSupport: true,
+
+        drawShadow: true,
+
+        flippingTime: 700,
+
+        usePortrait: true,
+
+        startPage: 0
+    });
+
+    pageFlip.loadFromHTML(pages.map(canvas => {
+
+        const pageDiv = document.createElement("div");
+
+        pageDiv.className = "page";
+
+        pageDiv.style.backgroundColor = "#ffffff";
+
+        pageDiv.appendChild(canvas);
+
+        return pageDiv;
+
+    }));
+
+    pageFlip.on("flip", (event) => {
+
+        pageNumber.textContent =
+            "Page " + (event.data + 1) + " / " + pdf.numPages;
+
+    });
+
+    window.pageFlip = pageFlip;
+
+    pageNumber.textContent =
+        "Page 1 / " + pdf.numPages;
+});
+
+function nextPage() {
+
+    if (window.pageFlip) {
+        window.pageFlip.flipNext();
+    }
+}
+
+function previousPage() {
+
+    if (window.pageFlip) {
+        window.pageFlip.flipPrev();
+    }
+}
+
+</script>
+
+</body>
+</html>

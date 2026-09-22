@@ -11,8 +11,13 @@
             box-sizing: border-box;
         }
 
-        body {
+        html, body {
             margin: 0;
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
             background: #f7f5f0;
             font-family: Arial, sans-serif;
             color: #333;
@@ -32,20 +37,35 @@
         .title {
             font-size: 18px;
             margin-bottom: 20px;
-            letter-spacing: 0.5px;
+            color: #174f42;
+        }
+
+        #loading {
+            font-size: 15px;
+            margin-bottom: 20px;
         }
 
         #book {
-            width: min(90vw, 1100px);
-            height: min(75vh, 760px);
-            margin: auto;
+            width: min(90vw, 1000px);
+            height: min(75vh, 720px);
+        }
+
+        .page {
+            background: white;
+            overflow: hidden;
+        }
+
+        .page canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
         .controls {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 14px;
+            gap: 16px;
             margin-top: 22px;
         }
 
@@ -64,28 +84,24 @@
         }
 
         #pageNumber {
+            min-width: 90px;
+            text-align: center;
             font-size: 14px;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        .loading {
-            text-align: center;
-            font-size: 16px;
         }
 
         @media (max-width: 700px) {
+
             .viewer {
                 padding: 15px 8px;
             }
 
-            #book {
-                width: 96vw;
-                height: 70vh;
-            }
-
             .title {
                 font-size: 15px;
+            }
+
+            #book {
+                width: 94vw;
+                height: 68vh;
             }
 
             button {
@@ -103,134 +119,176 @@
         Flip through my portfolio
     </div>
 
-    <div id="loading" class="loading">
+    <div id="loading">
         Loading portfolio...
     </div>
 
     <div id="book"></div>
 
     <div class="controls">
-        <button onclick="previousPage()">← Previous</button>
 
-        <span id="pageNumber">Page 1</span>
+        <button id="prev">
+            ← Previous
+        </button>
 
-        <button onclick="nextPage()">Next →</button>
+        <span id="pageNumber">
+            Page 1
+        </span>
+
+        <button id="next">
+            Next →
+        </button>
+
     </div>
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs"
-        type="module"></script>
 
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<!-- PageFlip -->
 <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
 
-<script type="module">
 
-    const pdfjsLib = await import(
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs"
-    );
+<script>
+
+    const PDF_URL = "portfolio.pdf";
 
     pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-    const pdfUrl = "portfolio.pdf";
 
-    const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+    async function createFlipbook() {
 
-    const book = document.getElementById("book");
-    const loading = document.getElementById("loading");
-    const pageNumber = document.getElementById("pageNumber");
+        const loading = document.getElementById("loading");
+        const bookElement = document.getElementById("book");
+        const pageNumber = document.getElementById("pageNumber");
 
-    const pages = [];
+        try {
 
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            // Load PDF
+            const pdf = await pdfjsLib.getDocument(PDF_URL).promise;
 
-        const page = await pdf.getPage(pageNum);
+            console.log("PDF loaded:", pdf.numPages, "pages");
 
-        const viewport = page.getViewport({ scale: 1.5 });
 
-        const canvas = document.createElement("canvas");
+            const pageElements = [];
 
-        const context = canvas.getContext("2d");
 
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+            // Render every PDF page
+            for (let i = 1; i <= pdf.numPages; i++) {
 
-        await page.render({
-            canvasContext: context,
-            viewport: viewport
-        }).promise;
+                const pdfPage = await pdf.getPage(i);
 
-        pages.push(canvas);
+                const viewport = pdfPage.getViewport({
+                    scale: 1.5
+                });
+
+
+                const canvas = document.createElement("canvas");
+
+                const context = canvas.getContext("2d");
+
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+
+                await pdfPage.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+
+                const pageDiv = document.createElement("div");
+
+                pageDiv.className = "page";
+
+                pageDiv.appendChild(canvas);
+
+                pageElements.push(pageDiv);
+            }
+
+
+            // Hide loading text
+            loading.style.display = "none";
+
+
+            // Create flipbook
+            const pageFlip = new St.PageFlip(
+                bookElement,
+                {
+                    width: 500,
+                    height: 700,
+
+                    size: "stretch",
+
+                    minWidth: 280,
+                    maxWidth: 600,
+
+                    minHeight: 400,
+                    maxHeight: 800,
+
+                    showCover: true,
+
+                    drawShadow: true,
+
+                    flippingTime: 700,
+
+                    usePortrait: true,
+
+                    mobileScrollSupport: true
+                }
+            );
+
+
+            // Load pages
+            pageFlip.loadFromHTML(pageElements);
+
+
+            // Page counter
+            pageFlip.on("flip", function(e) {
+
+                pageNumber.textContent =
+                    "Page " + (e.data + 1) + " / " + pdf.numPages;
+
+            });
+
+
+            // Buttons
+            document.getElementById("next").addEventListener(
+                "click",
+                function() {
+                    pageFlip.flipNext();
+                }
+            );
+
+
+            document.getElementById("prev").addEventListener(
+                "click",
+                function() {
+                    pageFlip.flipPrev();
+                }
+            );
+
+
+            pageNumber.textContent =
+                "Page 1 / " + pdf.numPages;
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            loading.textContent =
+                "Unable to load the portfolio.";
+
+        }
+
     }
 
-    loading.style.display = "none";
 
-    const pageFlip = new St.PageFlip(book, {
-        width: 500,
-        height: 700,
-
-        size: "stretch",
-
-        minWidth: 280,
-        maxWidth: 550,
-
-        minHeight: 400,
-        maxHeight: 750,
-
-        showCover: true,
-
-        mobileScrollSupport: true,
-
-        drawShadow: true,
-
-        flippingTime: 700,
-
-        usePortrait: true,
-
-        startPage: 0
-    });
-
-    pageFlip.loadFromHTML(pages.map(canvas => {
-
-        const pageDiv = document.createElement("div");
-
-        pageDiv.className = "page";
-
-        pageDiv.style.backgroundColor = "#ffffff";
-
-        pageDiv.appendChild(canvas);
-
-        return pageDiv;
-
-    }));
-
-    pageFlip.on("flip", (event) => {
-
-        pageNumber.textContent =
-            "Page " + (event.data + 1) + " / " + pdf.numPages;
-
-    });
-
-    window.pageFlip = pageFlip;
-
-    pageNumber.textContent =
-        "Page 1 / " + pdf.numPages;
-});
-
-function nextPage() {
-
-    if (window.pageFlip) {
-        window.pageFlip.flipNext();
-    }
-}
-
-function previousPage() {
-
-    if (window.pageFlip) {
-        window.pageFlip.flipPrev();
-    }
-}
+    createFlipbook();
 
 </script>
 

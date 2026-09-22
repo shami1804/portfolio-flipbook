@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +12,8 @@
             box-sizing: border-box;
         }
 
-        html, body {
+        html,
+        body {
             margin: 0;
             width: 100%;
             min-height: 100%;
@@ -21,61 +22,122 @@
         body {
             background: #f7f5f0;
             font-family: Arial, sans-serif;
+            color: #333;
             overflow-x: hidden;
         }
 
+
+        /* =========================
+           MAIN VIEWER
+        ========================= */
+
         .viewer {
+
             width: 100%;
             min-height: 100vh;
 
             display: flex;
             flex-direction: column;
+
             align-items: center;
             justify-content: center;
 
             padding: 25px 15px;
         }
 
+
+        /* =========================
+           TITLE
+        ========================= */
+
         .title {
+
             font-size: 18px;
+
             color: #174f42;
+
             margin-bottom: 18px;
+
+            letter-spacing: 0.2px;
         }
 
+
+        /* =========================
+           LOADING
+        ========================= */
+
         #status {
+
             font-size: 14px;
+
             color: #555;
+
             margin-bottom: 15px;
         }
 
+
+        /* =========================
+           FLIPBOOK
+        ========================= */
+
         #book {
+
             width: min(90vw, 1000px);
+
             height: min(75vh, 720px);
+
         }
+
+
+        /* =========================
+           PAGE
+        ========================= */
 
         .page {
-            background: white;
+
+            background: #fff;
+
             overflow: hidden;
+
         }
+
 
         .page canvas {
+
             width: 100%;
+
             height: 100%;
+
             display: block;
+
         }
 
+
+        /* =========================
+           CONTROLS
+        ========================= */
+
         .controls {
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
 
             gap: 15px;
+
             margin-top: 20px;
+
         }
 
+
         button {
+
             border: none;
+
             background: #174f42;
+
             color: white;
 
             padding: 9px 17px;
@@ -87,143 +149,230 @@
             font-size: 14px;
 
             transition: opacity 0.2s ease;
+
         }
+
 
         button:hover {
+
             opacity: 0.85;
+
         }
 
+
         #pageNumber {
+
             min-width: 90px;
+
             text-align: center;
+
             font-size: 14px;
+
             color: #444;
+
         }
+
+
+        /* =========================
+           MOBILE
+        ========================= */
 
         @media (max-width: 700px) {
 
             .viewer {
+
                 padding: 15px 8px;
+
             }
+
 
             .title {
+
                 font-size: 15px;
+
             }
+
 
             #book {
+
                 width: 94vw;
+
                 height: 68vh;
+
             }
 
+
             button {
+
                 padding: 8px 12px;
+
             }
+
         }
 
     </style>
+
 </head>
 
 
 <body>
 
+
 <div class="viewer">
 
+
     <div class="title">
+
         Flip through my portfolio
+
     </div>
 
+
     <div id="status">
+
         Loading portfolio...
+
     </div>
+
 
     <div id="book"></div>
 
+
     <div class="controls">
 
+
         <button id="prev">
+
             ← Previous
+
         </button>
+
 
         <span id="pageNumber">
+
             Page 1
+
         </span>
 
+
         <button id="next">
+
             Next →
+
         </button>
 
+
     </div>
+
 
 </div>
 
 
-<!-- PDF.js -->
+
+<!-- =========================
+     PDF.JS
+========================= -->
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
-<!-- PageFlip -->
+
+
+<!-- =========================
+     PAGE FLIP
+========================= -->
+
 <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+
 
 
 <script>
 
+
 async function start() {
+
 
     const status =
         document.getElementById("status");
 
+
     const bookElement =
         document.getElementById("book");
+
 
     const pageNumber =
         document.getElementById("pageNumber");
 
 
+
     try {
+
+
+        /* =========================
+           PDF.JS WORKER
+        ========================= */
 
         pdfjsLib.GlobalWorkerOptions.workerSrc =
             "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 
-        // Load PDF
+
+        /* =========================
+           LOAD PDF
+        ========================= */
+
         const pdf =
             await pdfjsLib
                 .getDocument("portfolio.pdf")
                 .promise;
 
 
+
         const pages = [];
 
 
-        // Render PDF pages
+
+        /* =========================
+           RENDER PDF PAGES
+        ========================= */
+
         for (
             let i = 1;
             i <= pdf.numPages;
             i++
         ) {
 
+
             const pdfPage =
                 await pdf.getPage(i);
 
 
+
             const viewport =
                 pdfPage.getViewport({
+
                     scale: 1.2
+
                 });
+
 
 
             const canvas =
                 document.createElement("canvas");
 
 
+
             const context =
                 canvas.getContext("2d");
+
 
 
             canvas.width =
                 viewport.width;
 
+
             canvas.height =
                 viewport.height;
+
 
 
             await pdfPage.render({
@@ -235,23 +384,30 @@ async function start() {
             }).promise;
 
 
+
             const page =
                 document.createElement("div");
+
 
 
             page.className =
                 "page";
 
 
-            /*
-             * FIRST + LAST PAGE
-             * = HARD DIARY COVER
-             */
+
+            /* =========================
+               COVER PAGES
+            ========================= */
 
             if (
                 i === 1 ||
                 i === pdf.numPages
             ) {
+
+                /*
+                 * FRONT + BACK
+                 * = HARD DIARY COVERS
+                 */
 
                 page.dataset.density =
                     "hard";
@@ -259,20 +415,45 @@ async function start() {
             }
 
 
+            /* =========================
+               MIDDLE PAGES
+            ========================= */
+
+            else {
+
+                /*
+                 * INNER PAGES
+                 * = SOFT DRAWING PAPER
+                 */
+
+                page.dataset.density =
+                    "soft";
+
+            }
+
+
+
             page.appendChild(canvas);
+
 
             pages.push(page);
 
         }
 
 
+
+        /* =========================
+           HIDE LOADING
+        ========================= */
+
         status.style.display =
             "none";
 
 
-        /*
-         * CREATE FLIPBOOK
-         */
+
+        /* =========================
+           CREATE FLIPBOOK
+        ========================= */
 
         const flipbook =
             new St.PageFlip(
@@ -299,27 +480,47 @@ async function start() {
                     maxHeight: 800,
 
 
+                    /*
+                     * COVER
+                     */
+
                     showCover: true,
 
 
                     /*
-                     * LIGHTER SHADOW
+                     * VERY LIGHT SHADOW
+                     *
+                     * Makes inner pages
+                     * look more matte
+                     * instead of shiny.
                      */
 
                     drawShadow: true,
 
-                    maxShadowOpacity: 0.18,
+                    maxShadowOpacity: 0.07,
 
 
                     /*
-                     * SMOOTHER / FASTER FLIP
+                     * SLOWER PAGE TURN
+                     *
+                     * Makes it feel
+                     * more like thick
+                     * drawing paper.
                      */
 
-                    flippingTime: 450,
+                    flippingTime: 600,
 
+
+                    /*
+                     * MOBILE SUPPORT
+                     */
 
                     mobileScrollSupport: true,
 
+
+                    /*
+                     * PORTRAIT MODE
+                     */
 
                     usePortrait: true
 
@@ -328,81 +529,123 @@ async function start() {
             );
 
 
-        /*
-         * LOAD PAGES
-         */
+
+        /* =========================
+           LOAD PAGES
+        ========================= */
 
         flipbook.loadFromHTML(pages);
 
 
-        /*
-         * PAGE NUMBER
-         */
+
+        /* =========================
+           PAGE COUNTER
+        ========================= */
 
         flipbook.on(
+
             "flip",
+
             function(e) {
 
                 pageNumber.textContent =
+
                     "Page " +
+
                     (e.data + 1) +
+
                     " / " +
+
                     pdf.numPages;
 
             }
+
         );
 
 
-        /*
-         * BUTTONS
-         */
+
+        /* =========================
+           NEXT BUTTON
+        ========================= */
 
         document
             .getElementById("next")
             .addEventListener(
+
                 "click",
+
                 function() {
 
                     flipbook.flipNext();
 
                 }
+
             );
 
+
+
+        /* =========================
+           PREVIOUS BUTTON
+        ========================= */
 
         document
             .getElementById("prev")
             .addEventListener(
+
                 "click",
+
                 function() {
 
                     flipbook.flipPrev();
 
                 }
+
             );
 
 
+
+        /* =========================
+           INITIAL PAGE NUMBER
+        ========================= */
+
         pageNumber.textContent =
+
             "Page 1 / " +
+
             pdf.numPages;
+
 
 
     }
 
+
     catch (error) {
+
 
         console.error(error);
 
+
         status.innerHTML =
+
             "Unable to load portfolio.";
+
 
     }
 
 }
 
 
+
+/* =========================
+   START
+========================= */
+
 start();
+
 
 </script>
 
+
 </body>
+
 </html>

@@ -3,31 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portfolio Flipbook</title>
+
+    <title>Shamiha Sellamuthu — Portfolio</title>
 
     <style>
-        body {
-            margin: 0;
-            background: #f7f5f0;
-            font-family: Arial, sans-serif;
-            text-align: center;
+
+        * {
+            box-sizing: border-box;
         }
 
-        h2 {
+        html, body {
+            margin: 0;
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            background: #f7f5f0;
+            font-family: Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .viewer {
+            width: 100%;
+            min-height: 100vh;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            padding: 25px 15px;
+        }
+
+        .title {
+            font-size: 18px;
             color: #174f42;
-            margin-top: 30px;
+            margin-bottom: 18px;
         }
 
         #status {
-            margin: 20px;
-            padding: 15px;
-            color: #333;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 15px;
         }
 
         #book {
-            width: 500px;
-            height: 700px;
-            margin: 30px auto;
+            width: min(90vw, 1000px);
+            height: min(75vh, 720px);
         }
 
         .page {
@@ -38,121 +61,344 @@
         .page canvas {
             width: 100%;
             height: 100%;
+            display: block;
         }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            border: none;
+            background: #174f42;
+            color: white;
+
+            padding: 9px 17px;
+
+            border-radius: 7px;
+
+            cursor: pointer;
+
+            font-size: 14px;
+
+            transition: opacity 0.2s ease;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        #pageNumber {
+            min-width: 90px;
+            text-align: center;
+            font-size: 14px;
+            color: #444;
+        }
+
+        @media (max-width: 700px) {
+
+            .viewer {
+                padding: 15px 8px;
+            }
+
+            .title {
+                font-size: 15px;
+            }
+
+            #book {
+                width: 94vw;
+                height: 68vh;
+            }
+
+            button {
+                padding: 8px 12px;
+            }
+        }
+
     </style>
 </head>
 
+
 <body>
 
-<h2>My Portfolio</h2>
+<div class="viewer">
 
-<div id="status">Starting...</div>
+    <div class="title">
+        Flip through my portfolio
+    </div>
 
-<div id="book"></div>
+    <div id="status">
+        Loading portfolio...
+    </div>
 
+    <div id="book"></div>
+
+    <div class="controls">
+
+        <button id="prev">
+            ← Previous
+        </button>
+
+        <span id="pageNumber">
+            Page 1
+        </span>
+
+        <button id="next">
+            Next →
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
+<!-- PageFlip -->
 <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+
 
 <script>
 
 async function start() {
 
-    const status = document.getElementById("status");
+    const status =
+        document.getElementById("status");
+
+    const bookElement =
+        document.getElementById("book");
+
+    const pageNumber =
+        document.getElementById("pageNumber");
+
 
     try {
-
-        status.innerHTML = "PDF.js loaded: " + typeof pdfjsLib;
 
         pdfjsLib.GlobalWorkerOptions.workerSrc =
             "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-        status.innerHTML += "<br>Loading PDF...";
 
-        const pdf = await pdfjsLib
-            .getDocument("portfolio.pdf")
-            .promise;
+        // Load PDF
+        const pdf =
+            await pdfjsLib
+                .getDocument("portfolio.pdf")
+                .promise;
 
-        status.innerHTML +=
-            "<br>PDF loaded successfully — " +
-            pdf.numPages +
-            " pages.";
 
         const pages = [];
 
-        for (let i = 1; i <= pdf.numPages; i++) {
 
-            status.innerHTML =
-                "Rendering page " + i + " of " + pdf.numPages + "...";
+        // Render PDF pages
+        for (
+            let i = 1;
+            i <= pdf.numPages;
+            i++
+        ) {
 
-            const pdfPage = await pdf.getPage(i);
+            const pdfPage =
+                await pdf.getPage(i);
+
 
             const viewport =
-                pdfPage.getViewport({ scale: 1.2 });
+                pdfPage.getViewport({
+                    scale: 1.2
+                });
+
 
             const canvas =
                 document.createElement("canvas");
 
+
             const context =
                 canvas.getContext("2d");
 
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
+
+            canvas.width =
+                viewport.width;
+
+            canvas.height =
+                viewport.height;
+
 
             await pdfPage.render({
+
                 canvasContext: context,
+
                 viewport: viewport
+
             }).promise;
 
-            const page = document.createElement("div");
 
-            page.className = "page";
+            const page =
+                document.createElement("div");
+
+
+            page.className =
+                "page";
+
+
+            /*
+             * FIRST + LAST PAGE
+             * = HARD DIARY COVER
+             */
+
+            if (
+                i === 1 ||
+                i === pdf.numPages
+            ) {
+
+                page.dataset.density =
+                    "hard";
+
+            }
+
 
             page.appendChild(canvas);
 
             pages.push(page);
+
         }
 
-        status.innerHTML =
-            "Pages rendered. Creating flipbook...";
 
-        console.log("PageFlip:", typeof St);
+        status.style.display =
+            "none";
 
-        const flipbook = new St.PageFlip(
-            document.getElementById("book"),
-            {
-                width: 500,
-                height: 700,
-                size: "stretch",
-                minWidth: 280,
-                maxWidth: 700,
-                minHeight: 400,
-                maxHeight: 900,
-                showCover: true,
-                drawShadow: true,
-                flippingTime: 700,
-                mobileScrollSupport: true
-            }
-        );
+
+        /*
+         * CREATE FLIPBOOK
+         */
+
+        const flipbook =
+            new St.PageFlip(
+
+                bookElement,
+
+                {
+
+                    width: 500,
+
+                    height: 700,
+
+
+                    size: "stretch",
+
+
+                    minWidth: 280,
+
+                    maxWidth: 600,
+
+
+                    minHeight: 400,
+
+                    maxHeight: 800,
+
+
+                    showCover: true,
+
+
+                    /*
+                     * LIGHTER SHADOW
+                     */
+
+                    drawShadow: true,
+
+                    maxShadowOpacity: 0.18,
+
+
+                    /*
+                     * SMOOTHER / FASTER FLIP
+                     */
+
+                    flippingTime: 450,
+
+
+                    mobileScrollSupport: true,
+
+
+                    usePortrait: true
+
+                }
+
+            );
+
+
+        /*
+         * LOAD PAGES
+         */
 
         flipbook.loadFromHTML(pages);
 
-        status.innerHTML =
-            "✓ Flipbook loaded successfully!";
 
-    } catch (error) {
+        /*
+         * PAGE NUMBER
+         */
+
+        flipbook.on(
+            "flip",
+            function(e) {
+
+                pageNumber.textContent =
+                    "Page " +
+                    (e.data + 1) +
+                    " / " +
+                    pdf.numPages;
+
+            }
+        );
+
+
+        /*
+         * BUTTONS
+         */
+
+        document
+            .getElementById("next")
+            .addEventListener(
+                "click",
+                function() {
+
+                    flipbook.flipNext();
+
+                }
+            );
+
+
+        document
+            .getElementById("prev")
+            .addEventListener(
+                "click",
+                function() {
+
+                    flipbook.flipPrev();
+
+                }
+            );
+
+
+        pageNumber.textContent =
+            "Page 1 / " +
+            pdf.numPages;
+
+
+    }
+
+    catch (error) {
 
         console.error(error);
 
         status.innerHTML =
-            "<strong>ERROR:</strong><br><br>" +
-            error.name +
-            "<br>" +
-            error.message;
+            "Unable to load portfolio.";
 
     }
 
 }
+
 
 start();
 

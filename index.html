@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Shamiha Sellamuthu — Portfolio</title>
+
 
     <style>
 
@@ -12,37 +19,52 @@
             box-sizing: border-box;
         }
 
+
         html,
         body {
+
             margin: 0;
+
             width: 100%;
+
             min-height: 100%;
+
         }
 
+
         body {
+
             background: #f7f5f0;
+
             font-family: Arial, sans-serif;
+
             color: #333;
+
             overflow-x: hidden;
+
         }
 
 
         /* =========================
-           MAIN VIEWER
+           VIEWER
         ========================= */
 
         .viewer {
 
             width: 100%;
+
             min-height: 100vh;
 
             display: flex;
+
             flex-direction: column;
 
             align-items: center;
+
             justify-content: center;
 
             padding: 25px 15px;
+
         }
 
 
@@ -59,6 +81,7 @@
             margin-bottom: 18px;
 
             letter-spacing: 0.2px;
+
         }
 
 
@@ -73,11 +96,12 @@
             color: #555;
 
             margin-bottom: 15px;
+
         }
 
 
         /* =========================
-           FLIPBOOK
+           BOOK
         ========================= */
 
         #book {
@@ -86,11 +110,22 @@
 
             height: min(75vh, 720px);
 
+            /*
+             * Helps browser treat dragging
+             * as an intentional interaction.
+             */
+
+            touch-action: pan-y;
+
+            user-select: none;
+
+            -webkit-user-select: none;
+
         }
 
 
         /* =========================
-           PAGE
+           PAGES
         ========================= */
 
         .page {
@@ -98,6 +133,14 @@
             background: #fff;
 
             overflow: hidden;
+
+            /*
+             * Slightly softer edge.
+             * Helps the page feel less
+             * like a thin digital sheet.
+             */
+
+            border-radius: 1px;
 
         }
 
@@ -109,6 +152,8 @@
             height: 100%;
 
             display: block;
+
+            pointer-events: none;
 
         }
 
@@ -148,14 +193,23 @@
 
             font-size: 14px;
 
-            transition: opacity 0.2s ease;
+            transition:
+                opacity 0.2s ease,
+                transform 0.15s ease;
 
         }
 
 
         button:hover {
 
-            opacity: 0.85;
+            opacity: 0.88;
+
+        }
+
+
+        button:active {
+
+            transform: scale(0.97);
 
         }
 
@@ -308,7 +362,7 @@ async function start() {
 
 
         /* =========================
-           PDF.JS WORKER
+           PDF WORKER
         ========================= */
 
         pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -332,7 +386,7 @@ async function start() {
 
 
         /* =========================
-           RENDER PDF PAGES
+           RENDER PAGES
         ========================= */
 
         for (
@@ -396,18 +450,13 @@ async function start() {
 
 
             /* =========================
-               COVER PAGES
+               COVER
             ========================= */
 
             if (
                 i === 1 ||
                 i === pdf.numPages
             ) {
-
-                /*
-                 * FRONT + BACK
-                 * = HARD DIARY COVERS
-                 */
 
                 page.dataset.density =
                     "hard";
@@ -416,15 +465,10 @@ async function start() {
 
 
             /* =========================
-               MIDDLE PAGES
+               INNER PAGES
             ========================= */
 
             else {
-
-                /*
-                 * INNER PAGES
-                 * = SOFT DRAWING PAPER
-                 */
 
                 page.dataset.density =
                     "soft";
@@ -442,17 +486,13 @@ async function start() {
 
 
 
-        /* =========================
-           HIDE LOADING
-        ========================= */
-
         status.style.display =
             "none";
 
 
 
         /* =========================
-           CREATE FLIPBOOK
+           FLIPBOOK
         ========================= */
 
         const flipbook =
@@ -481,48 +521,56 @@ async function start() {
 
 
                     /*
-                     * COVER
+                     * Keep covers as covers
                      */
 
                     showCover: true,
 
 
                     /*
-                     * VERY LIGHT SHADOW
+                     * LOWER SHADOW
                      *
-                     * Makes inner pages
-                     * look more matte
-                     * instead of shiny.
+                     * Matte drawing paper
+                     * rather than glossy paper.
                      */
 
                     drawShadow: true,
 
-                    maxShadowOpacity: 0.07,
+                    maxShadowOpacity: 0.09,
 
 
                     /*
-                     * SLOWER PAGE TURN
+                     * SMOOTHER FLIP
                      *
-                     * Makes it feel
-                     * more like thick
-                     * drawing paper.
+                     * Slightly slower than
+                     * before so the sheet
+                     * feels heavier.
                      */
 
-                    flippingTime: 600,
+                    flippingTime: 680,
 
 
                     /*
-                     * MOBILE SUPPORT
+                     * IMPORTANT
+                     *
+                     * Makes interaction
+                     * respond better to
+                     * dragging/touching.
                      */
+
+                    usePortrait: true,
+
 
                     mobileScrollSupport: true,
 
 
                     /*
-                     * PORTRAIT MODE
+                     * Prevents accidental
+                     * vertical scrolling
+                     * while flipping.
                      */
 
-                    usePortrait: true
+                    startPage: 0
 
                 }
 
@@ -565,7 +613,7 @@ async function start() {
 
 
         /* =========================
-           NEXT BUTTON
+           BUTTONS
         ========================= */
 
         document
@@ -584,10 +632,6 @@ async function start() {
 
 
 
-        /* =========================
-           PREVIOUS BUTTON
-        ========================= */
-
         document
             .getElementById("prev")
             .addEventListener(
@@ -604,16 +648,40 @@ async function start() {
 
 
 
-        /* =========================
-           INITIAL PAGE NUMBER
-        ========================= */
-
         pageNumber.textContent =
 
             "Page 1 / " +
 
             pdf.numPages;
 
+
+
+        /*
+         * Allow keyboard navigation
+         */
+
+        document.addEventListener(
+
+            "keydown",
+
+            function(e) {
+
+                if (e.key === "ArrowRight") {
+
+                    flipbook.flipNext();
+
+                }
+
+
+                if (e.key === "ArrowLeft") {
+
+                    flipbook.flipPrev();
+
+                }
+
+            }
+
+        );
 
 
     }
@@ -628,7 +696,6 @@ async function start() {
         status.innerHTML =
 
             "Unable to load portfolio.";
-
 
     }
 

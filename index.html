@@ -63,7 +63,7 @@
         }
 
         /* --------------------------------
-           PDF PAGE
+           PAGE
         -------------------------------- */
 
         .page {
@@ -90,50 +90,37 @@
         }
 
         /* --------------------------------
-           CLICKABLE PDF LINKS
+           CLICKABLE PORTFOLIO LINK
         -------------------------------- */
 
-        .link-layer {
+        .clickable-link {
             position: absolute;
 
-            left: 0;
-            top: 0;
+            z-index: 20;
 
-            width: 100%;
-            height: 100%;
+            /*
+             * Position of the "Be" link
+             * on page 7.
+             *
+             * These values can be adjusted
+             * later if needed.
+             */
 
-            z-index: 10;
+            left: 0%;
+            top: 55%;
 
-            pointer-events: none;
-        }
-
-        .pdf-link {
-            position: absolute;
+            width: 18%;
+            height: 8%;
 
             display: block;
 
-            pointer-events: auto;
+            background: transparent;
 
             cursor: pointer;
 
-            /*
-             * Invisible by default.
-             * Change opacity to 0.15 temporarily
-             * if you want to see the clickable areas.
-             */
-
-            background: transparent;
-
             text-decoration: none;
-        }
 
-        /*
-         * Make sure clicking the link doesn't
-         * accidentally trigger PageFlip.
-         */
-
-        .pdf-link:hover {
-            background: rgba(255, 255, 255, 0.01);
+            pointer-events: auto;
         }
 
 
@@ -279,14 +266,11 @@
 
 async function start() {
 
-
     const status =
         document.getElementById("status");
 
-
     const bookElement =
         document.getElementById("book");
-
 
     const pageNumber =
         document.getElementById("pageNumber");
@@ -303,7 +287,6 @@ async function start() {
             "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 
-
         /* =====================================
            LOAD PDF
         ===================================== */
@@ -317,9 +300,8 @@ async function start() {
         const pages = [];
 
 
-
         /* =====================================
-           CREATE ALL PDF PAGES
+           CREATE PDF PAGES
         ===================================== */
 
         for (
@@ -333,62 +315,11 @@ async function start() {
                 await pdf.getPage(i);
 
 
-
-            /* ---------------------------------
-               PDF VIEWPORT
-            --------------------------------- */
-
             const viewport =
                 pdfPage.getViewport({
                     scale: 1.2
                 });
 
-
-
-            /* ---------------------------------
-               PAGE CONTAINER
-            --------------------------------- */
-
-            const page =
-                document.createElement("div");
-
-
-            page.className =
-                "page";
-
-
-            /*
-             * FRONT + BACK
-             * = HARD DIARY COVER
-             */
-
-            if (
-                i === 1 ||
-                i === pdf.numPages
-            ) {
-
-                page.dataset.density =
-                    "hard";
-
-            }
-
-            /*
-             * INSIDE PAGES
-             * = SOFT PAPER
-             */
-
-            else {
-
-                page.dataset.density =
-                    "soft";
-
-            }
-
-
-
-            /* =================================
-               PDF CANVAS
-            ================================= */
 
             const canvas =
                 document.createElement("canvas");
@@ -406,7 +337,6 @@ async function start() {
                 viewport.height;
 
 
-
             await pdfPage.render({
 
                 canvasContext:
@@ -418,157 +348,70 @@ async function start() {
             }).promise;
 
 
+            /* =================================
+               PAGE CONTAINER
+            ================================= */
+
+            const page =
+                document.createElement("div");
+
+
+            page.className =
+                "page";
+
+
+            /* =================================
+               FRONT + BACK COVER
+            ================================= */
+
+            if (
+                i === 1 ||
+                i === pdf.numPages
+            ) {
+
+                page.dataset.density =
+                    "hard";
+
+            }
+
+
+            /* =================================
+               INSIDE PAGES
+            ================================= */
+
+            else {
+
+                page.dataset.density =
+                    "soft";
+
+            }
+
+
+            /* =================================
+               ADD PDF CANVAS
+            ================================= */
 
             page.appendChild(canvas);
 
 
-
             /* =================================
-               LINK LAYER
+               CLICKABLE LINK
+               
+               PAGE 7
             ================================= */
 
-            const linkLayer =
-                document.createElement("div");
-
-
-            linkLayer.className =
-                "link-layer";
-
-
-            page.appendChild(linkLayer);
-
-
-
-            /* =================================
-               GET PDF LINK ANNOTATIONS
-            ================================= */
-
-            const annotations =
-                await pdfPage.getAnnotations();
-
-
-
-            for (
-                const annotation of annotations
-            ) {
-
-
-                /*
-                 * We only need actual links.
-                 */
-
-                if (
-                    annotation.subtype !== "Link"
-                ) {
-
-                    continue;
-
-                }
-
-
-
-                /*
-                 * External URL
-                 */
-
-                let url =
-                    annotation.url;
-
-
-
-                /*
-                 * Some PDFs store the URL
-                 * under unsafeUrl instead.
-                 */
-
-                if (
-                    !url &&
-                    annotation.unsafeUrl
-                ) {
-
-                    url =
-                        annotation.unsafeUrl;
-
-                }
-
-
-
-                /*
-                 * If there isn't an external
-                 * URL, skip it for now.
-                 */
-
-                if (!url) {
-
-                    continue;
-
-                }
-
-
-
-                /* =================================
-                   PDF COORDINATES → SCREEN
-                ================================= */
-
-                const rect =
-                    annotation.rect;
-
-
-                const bounds =
-                    viewport
-                        .convertToViewportRectangle(
-                            rect
-                        );
-
-
-                /*
-                 * PDF coordinates can come
-                 * in either direction.
-                 */
-
-                const left =
-                    Math.min(
-                        bounds[0],
-                        bounds[2]
-                    );
-
-
-                const top =
-                    Math.min(
-                        bounds[1],
-                        bounds[3]
-                    );
-
-
-                const width =
-                    Math.abs(
-                        bounds[2] -
-                        bounds[0]
-                    );
-
-
-                const height =
-                    Math.abs(
-                        bounds[3] -
-                        bounds[1]
-                    );
-
-
-
-                /* =================================
-                   CREATE CLICKABLE LINK
-                ================================= */
+            if (i === 7) {
 
                 const link =
                     document.createElement("a");
 
 
                 link.className =
-                    "pdf-link";
+                    "clickable-link";
 
 
                 link.href =
-                    url;
+                    "https://shami1804.github.io/portfolio-flipbook/";
 
 
                 link.target =
@@ -579,28 +422,11 @@ async function start() {
                     "noopener noreferrer";
 
 
-
-                link.style.left =
-                    left + "px";
-
-
-                link.style.top =
-                    top + "px";
-
-
-                link.style.width =
-                    width + "px";
-
-
-                link.style.height =
-                    height + "px";
-
-
-
-                /* =================================
-                   STOP PAGEFLIP FROM CAPTURING
-                   THE LINK CLICK
-                ================================= */
+                /*
+                 * Prevent PageFlip from
+                 * treating the click as
+                 * a page-turn.
+                 */
 
                 link.addEventListener(
                     "pointerdown",
@@ -652,17 +478,14 @@ async function start() {
                 );
 
 
-
-                linkLayer.appendChild(link);
+                page.appendChild(link);
 
             }
-
 
 
             pages.push(page);
 
         }
-
 
 
         /* =====================================
@@ -671,7 +494,6 @@ async function start() {
 
         status.style.display =
             "none";
-
 
 
         /* =====================================
@@ -704,9 +526,9 @@ async function start() {
 
 
                     /*
-                     * Keep this OFF because
-                     * it was causing the cover
-                     * transition gap.
+                     * Keep false because
+                     * showCover was causing
+                     * the cover gap.
                      */
 
                     showCover: false,
@@ -729,14 +551,14 @@ async function start() {
 
 
                     /*
-                     * Responsive.
+                     * Responsive portrait mode.
                      */
 
                     usePortrait: true,
 
 
                     /*
-                     * Touch support.
+                     * Mobile support.
                      */
 
                     mobileScrollSupport: true,
@@ -750,14 +572,14 @@ async function start() {
 
 
                     /*
-                     * Easier page drag.
+                     * Easier dragging.
                      */
 
                     swipeDistance: 20,
 
 
                     /*
-                     * Clicking can turn pages.
+                     * Clicking turns pages.
                      */
 
                     disableFlipByClick: false
@@ -767,13 +589,11 @@ async function start() {
             );
 
 
-
         /* =====================================
            LOAD PAGES
         ===================================== */
 
         flipbook.loadFromHTML(pages);
-
 
 
         /* =====================================
@@ -783,7 +603,6 @@ async function start() {
         flipbook.on(
             "flip",
             function(e) {
-
 
                 let currentPage =
                     e.data + 1;
@@ -818,7 +637,6 @@ async function start() {
         );
 
 
-
         /* =====================================
            NEXT BUTTON
         ===================================== */
@@ -833,7 +651,6 @@ async function start() {
 
                 }
             );
-
 
 
         /* =====================================
@@ -852,7 +669,6 @@ async function start() {
             );
 
 
-
         /* =====================================
            INITIAL PAGE
         ===================================== */
@@ -862,7 +678,6 @@ async function start() {
             pdf.numPages;
 
 
-
         /* =====================================
            KEYBOARD CONTROLS
         ===================================== */
@@ -870,7 +685,6 @@ async function start() {
         document.addEventListener(
             "keydown",
             function(e) {
-
 
                 if (
                     e.key === "ArrowRight"
@@ -898,18 +712,14 @@ async function start() {
 
     catch (error) {
 
-
         console.error(error);
-
 
         status.innerHTML =
             "Unable to load portfolio.";
 
-
     }
 
 }
-
 
 
 /* =========================================

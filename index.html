@@ -2,15 +2,21 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>Shamiha Sellamuthu — Portfolio</title>
 
+
     <style>
+
         * {
             box-sizing: border-box;
         }
+
 
         html,
         body {
@@ -19,74 +25,164 @@
             min-height: 100%;
         }
 
+
         body {
             background: #f7f5f0;
+
             font-family: Arial, sans-serif;
+
             color: #333;
+
             overflow-x: hidden;
         }
 
+
+        /* --------------------------------
+           MAIN VIEWER
+        -------------------------------- */
+
         .viewer {
+
             width: 100%;
+
             min-height: 100vh;
 
             display: flex;
+
             flex-direction: column;
+
             align-items: center;
+
             justify-content: center;
 
             padding: 25px 15px;
         }
 
-        .title {
-            font-size: 18px;
-            color: #174f42;
-            margin-bottom: 18px;
-            letter-spacing: 0.2px;
-        }
+
+        /* --------------------------------
+           LOADING TEXT
+        -------------------------------- */
 
         #status {
+
             font-size: 14px;
+
             color: #555;
+
             margin-bottom: 15px;
         }
 
+
+        /* --------------------------------
+           FLIPBOOK
+        -------------------------------- */
+
         #book {
+
             width: min(90vw, 1000px);
+
             height: min(75vh, 720px);
 
             touch-action: pan-y;
+
             user-select: none;
+
             -webkit-user-select: none;
         }
 
+
+        /* --------------------------------
+           PAGE
+        -------------------------------- */
+
         .page {
+
+            position: relative;
+
             background: #fff;
+
             overflow: hidden;
+
             border-radius: 1px;
         }
 
+
+        /* --------------------------------
+           PDF CANVAS
+        -------------------------------- */
+
         .page canvas {
+
             width: 100%;
+
             height: 100%;
+
             display: block;
 
             pointer-events: none;
         }
 
+
+        /* --------------------------------
+           CLICKABLE LINK
+           PAGE 7
+        -------------------------------- */
+
+        .clickable-link {
+
+            position: absolute;
+
+            z-index: 20;
+
+            /*
+             * Position of the "Be" link
+             * on page 7
+             */
+
+            left: 0%;
+
+            top: 55%;
+
+            width: 18%;
+
+            height: 8%;
+
+            display: block;
+
+            background: transparent;
+
+            cursor: pointer;
+
+            text-decoration: none;
+
+            pointer-events: auto;
+        }
+
+
+        /* --------------------------------
+           CONTROLS
+        -------------------------------- */
+
         .controls {
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
 
             gap: 15px;
+
             margin-top: 20px;
         }
 
+
         button {
+
             border: none;
 
             background: #174f42;
+
             color: white;
 
             padding: 9px 17px;
@@ -102,15 +198,21 @@
                 transform 0.15s ease;
         }
 
+
         button:hover {
+
             opacity: 0.88;
         }
 
+
         button:active {
+
             transform: scale(0.97);
         }
 
+
         #pageNumber {
+
             min-width: 90px;
 
             text-align: center;
@@ -120,96 +222,127 @@
             color: #444;
         }
 
+
+        /* --------------------------------
+           MOBILE
+        -------------------------------- */
+
         @media (max-width: 700px) {
 
             .viewer {
+
                 padding: 15px 8px;
             }
 
-            .title {
-                font-size: 15px;
-            }
 
             #book {
+
                 width: 94vw;
+
                 height: 68vh;
             }
 
+
             button {
+
                 padding: 8px 12px;
             }
+
         }
+
     </style>
+
 </head>
 
 
 <body>
 
+
     <div class="viewer">
 
-        <div class="title">
-            Flip through my portfolio
-        </div>
 
         <div id="status">
             Loading portfolio...
         </div>
 
+
         <div id="book"></div>
 
+
         <div class="controls">
+
 
             <button id="prev">
                 ← Previous
             </button>
 
+
             <span id="pageNumber">
                 Page 1
             </span>
+
 
             <button id="next">
                 Next →
             </button>
 
+
         </div>
+
 
     </div>
 
 
-    <!-- PDF.js -->
+
+    <!-- =====================================
+         PDF.JS
+    ====================================== -->
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
-    <!-- PageFlip -->
+
+
+    <!-- =====================================
+         PAGE FLIP
+    ====================================== -->
+
     <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+
 
 
     <script>
 
         async function start() {
 
+
             const status =
                 document.getElementById("status");
 
+
             const bookElement =
                 document.getElementById("book");
+
 
             const pageNumber =
                 document.getElementById("pageNumber");
 
 
+
             try {
 
-                /* --------------------------------
+
+                /* =================================
                    PDF.JS WORKER
-                -------------------------------- */
+                ================================= */
 
                 pdfjsLib.GlobalWorkerOptions.workerSrc =
                     "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 
-                /* --------------------------------
+
+                /* =================================
                    LOAD PDF
-                -------------------------------- */
+                ================================= */
 
                 const pdf =
                     await pdfjsLib
@@ -217,12 +350,14 @@
                         .promise;
 
 
+
                 const pages = [];
 
 
-                /* --------------------------------
+
+                /* =================================
                    CREATE PDF PAGES
-                -------------------------------- */
+                ================================= */
 
                 for (
                     let i = 1;
@@ -230,8 +365,10 @@
                     i++
                 ) {
 
+
                     const pdfPage =
                         await pdf.getPage(i);
+
 
 
                     const viewport =
@@ -240,20 +377,33 @@
                         });
 
 
+
+                    /* =============================
+                       CANVAS
+                    ============================= */
+
                     const canvas =
                         document.createElement("canvas");
+
 
 
                     const context =
                         canvas.getContext("2d");
 
 
+
                     canvas.width =
                         viewport.width;
+
 
                     canvas.height =
                         viewport.height;
 
+
+
+                    /* =============================
+                       RENDER PDF
+                    ============================= */
 
                     await pdfPage.render({
 
@@ -266,9 +416,10 @@
                     }).promise;
 
 
-                    /* --------------------------------
-                       CREATE PAGE ELEMENT
-                    -------------------------------- */
+
+                    /* =============================
+                       PAGE ELEMENT
+                    ============================= */
 
                     const page =
                         document.createElement("div");
@@ -278,10 +429,10 @@
                         "page";
 
 
-                    /*
-                     * FRONT + BACK
-                     * = HARD DIARY COVER
-                     */
+
+                    /* =============================
+                       HARD COVERS
+                    ============================= */
 
                     if (
                         i === 1 ||
@@ -293,10 +444,10 @@
 
                     }
 
-                    /*
-                     * INSIDE PAGES
-                     * = SOFT / THICK PAPER
-                     */
+
+                    /* =============================
+                       SOFT INSIDE PAGES
+                    ============================= */
 
                     else {
 
@@ -306,33 +457,138 @@
                     }
 
 
+
+                    /* =============================
+                       ADD CANVAS
+                    ============================= */
+
                     page.appendChild(canvas);
+
+
+
+                    /* =================================
+                       CLICKABLE LINK ON PAGE 7
+                    ================================= */
+
+                    if (i === 7) {
+
+
+                        const link =
+                            document.createElement("a");
+
+
+                        link.className =
+                            "clickable-link";
+
+
+                        link.href =
+                            "https://shami1804.github.io/portfolio-flipbook/";
+
+
+                        link.target =
+                            "_blank";
+
+
+                        link.rel =
+                            "noopener noreferrer";
+
+
+
+                        /* =============================
+                           STOP PAGE TURN
+                        ============================= */
+
+                        link.addEventListener(
+                            "pointerdown",
+                            function(e) {
+
+                                e.stopPropagation();
+
+                            }
+                        );
+
+
+                        link.addEventListener(
+                            "pointerup",
+                            function(e) {
+
+                                e.stopPropagation();
+
+                            }
+                        );
+
+
+                        link.addEventListener(
+                            "mousedown",
+                            function(e) {
+
+                                e.stopPropagation();
+
+                            }
+                        );
+
+
+                        link.addEventListener(
+                            "mouseup",
+                            function(e) {
+
+                                e.stopPropagation();
+
+                            }
+                        );
+
+
+                        link.addEventListener(
+                            "click",
+                            function(e) {
+
+                                e.stopPropagation();
+
+                            }
+                        );
+
+
+
+                        page.appendChild(link);
+
+                    }
+
+
+
+                    /* =============================
+                       SAVE PAGE
+                    ============================= */
 
                     pages.push(page);
 
                 }
 
 
-                /* --------------------------------
+
+                /* =================================
                    HIDE LOADING
-                -------------------------------- */
+                ================================= */
 
                 status.style.display =
                     "none";
 
 
-                /* --------------------------------
+
+                /* =================================
                    CREATE FLIPBOOK
-                -------------------------------- */
+                ================================= */
 
                 const flipbook =
                     new St.PageFlip(
+
                         bookElement,
+
                         {
 
                             width: 500,
 
                             height: 700,
+
 
                             size: "stretch",
 
@@ -347,95 +603,85 @@
                             maxHeight: 800,
 
 
-                            /*
-                             * Keeps the first
-                             * and last pages
-                             * as covers.
-                             */
+                            /* =========================
+                               COVER
+                            ========================= */
 
                             showCover: true,
 
 
-                            /*
-                             * Page shadow
-                             *
-                             * Reduced so the
-                             * cover transition
-                             * doesn't create
-                             * a huge empty area.
-                             */
+                            /* =========================
+                               SHADOW
+                            ========================= */
 
                             drawShadow: true,
 
                             maxShadowOpacity: 0.04,
 
 
-                            /*
-                             * Slightly faster
-                             * animation makes
-                             * the cover transition
-                             * feel smoother.
-                             */
+                            /* =========================
+                               ANIMATION
+                            ========================= */
 
                             flippingTime: 520,
 
 
-                            /*
-                             * Allows the book
-                             * to become portrait
-                             * on smaller screens.
-                             */
+                            /* =========================
+                               RESPONSIVE
+                            ========================= */
 
                             usePortrait: true,
 
 
-                            /*
-                             * Mobile scrolling.
-                             */
+                            /* =========================
+                               MOBILE
+                            ========================= */
 
                             mobileScrollSupport: true,
 
 
-                            /*
-                             * Easier mouse dragging.
-                             */
+                            /* =========================
+                               MOUSE DRAGGING
+                            ========================= */
 
                             useMouseEvents: true,
 
 
-                            /*
-                             * Smaller swipe distance
-                             * means easier page turns.
-                             */
+                            /* =========================
+                               EASY SWIPE
+                            ========================= */
 
                             swipeDistance: 20,
 
 
-                            /*
-                             * Clicking a page can
-                             * also turn it.
-                             */
+                            /* =========================
+                               CLICK TO FLIP
+                            ========================= */
 
                             disableFlipByClick: false
 
                         }
+
                     );
 
 
-                /* --------------------------------
+
+                /* =================================
                    LOAD PAGES
-                -------------------------------- */
+                ================================= */
 
                 flipbook.loadFromHTML(pages);
 
 
-                /* --------------------------------
+
+                /* =================================
                    PAGE NUMBER
-                -------------------------------- */
+                ================================= */
 
                 flipbook.on(
                     "flip",
-                    function (e) {
+                    function(e) {
+
 
                         pageNumber.textContent =
                             "Page " +
@@ -447,15 +693,16 @@
                 );
 
 
-                /* --------------------------------
+
+                /* =================================
                    NEXT BUTTON
-                -------------------------------- */
+                ================================= */
 
                 document
                     .getElementById("next")
                     .addEventListener(
                         "click",
-                        function () {
+                        function() {
 
                             flipbook.flipNext();
 
@@ -463,15 +710,16 @@
                     );
 
 
-                /* --------------------------------
+
+                /* =================================
                    PREVIOUS BUTTON
-                -------------------------------- */
+                ================================= */
 
                 document
                     .getElementById("prev")
                     .addEventListener(
                         "click",
-                        function () {
+                        function() {
 
                             flipbook.flipPrev();
 
@@ -479,22 +727,25 @@
                     );
 
 
-                /* --------------------------------
-                   INITIAL PAGE NUMBER
-                -------------------------------- */
+
+                /* =================================
+                   INITIAL PAGE
+                ================================= */
 
                 pageNumber.textContent =
                     "Page 1 / " +
                     pdf.numPages;
 
 
-                /* --------------------------------
+
+                /* =================================
                    KEYBOARD CONTROLS
-                -------------------------------- */
+                ================================= */
 
                 document.addEventListener(
                     "keydown",
-                    function (e) {
+                    function(e) {
+
 
                         if (
                             e.key === "ArrowRight"
@@ -517,9 +768,14 @@
                 );
 
 
-            } catch (error) {
+            }
+
+
+            catch (error) {
+
 
                 console.error(error);
+
 
                 status.innerHTML =
                     "Unable to load portfolio.";
@@ -529,13 +785,15 @@
         }
 
 
-        /* --------------------------------
-           START FLIPBOOK
-        -------------------------------- */
+
+        /* =====================================
+           START
+        ===================================== */
 
         start();
 
     </script>
+
 
 </body>
 
